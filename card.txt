@@ -78,7 +78,7 @@ custom_fields:
                 if (states['input_boolean.check_shedding'].state === 'on') { 
                   return 'Protection in Progress 🛡️ '; } 
                 else if (states['timer.load_shedding'].state !== 'idle') { 
-                  return 'Disconnection in '; }
+                  return 'Shedding in '; }
                 else { 
                   return 'Absorption: Ok 👍'; } 
               ]]]
@@ -319,7 +319,7 @@ custom_fields:
                 rit_dist:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.load_disconnection
+                    entity: input_number.load_shedding
                     layout: vertical
                     icon_color: green
                     tap_action:
@@ -369,7 +369,7 @@ custom_fields:
                 dis_carichi:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.load_disconnection
+                    entity: input_number.load_shedding
                     layout: vertical
                     card_mod:
                       style: |
@@ -380,7 +380,7 @@ custom_fields:
                 dis_emergenza:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.urgent_disconnection
+                    entity: input_number.urgent_shedding
                     layout: vertical
                     tap_action:
                       action: none

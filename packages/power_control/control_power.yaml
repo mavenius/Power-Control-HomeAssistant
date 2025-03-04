@@ -1,6 +1,6 @@
 input_number:
-  load_disconnection_delay:
-    name: Load Disconnection Delay
+  load_shedding_delay:
+    name: Load Shedding Delay
     mode: box
     icon: mdi:timelapse
     unit_of_measurement: "min"
@@ -15,16 +15,16 @@ input_number:
     min: 99
     max: 8000
     step: 100
-  load_disconnection:
-    name: Load Disconnection
+  load_shedding:
+    name: Load Shedding
     icon: mdi:power-plug-off
     min: 99
     max: 11000
     step: 100
     unit_of_measurement: "W"
     mode: box
-  urgent_disconnection:
-    name: Urgent Disconnection
+  urgent_shedding:
+    name: Urgent Shedding
     icon: mdi:alert
     min: 99
     max: 11000
@@ -33,9 +33,9 @@ input_number:
     mode: box
 
 timer:
-  load_disconnection:
+  load_shedding:
     restore: true
-    name: Load Disconnection Delay
+    name: Load Shedding Delay
 
 template:
   - select:
@@ -75,7 +75,7 @@ template:
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.check_disconnection
+        entity_id: input_boolean.check_shedding
         to: "off"
         for:
           minutes: 1
@@ -86,8 +86,8 @@ template:
     sensor:
       - name: marquee power control
         state: >-
-          {% if trigger.entity_id == 'input_boolean.check_disconnection' %}
-            {{ 'Last intervention on ' ~ as_local(states['input_boolean.check_disconnection'].last_changed).strftime('%d/%m/%Y %H:%M') }}
+          {% if trigger.entity_id == 'input_boolean.check_shedding' %}
+            {{ 'Last intervention on ' ~ as_local(states['input_boolean.check_shedding'].last_changed).strftime('%d/%m/%Y %H:%M') }}
           {% else %}
             {{ trigger.event.data.message | default('Message not set') }}
           {% endif %}
@@ -98,7 +98,7 @@ input_text:
     max: 255
 
 input_boolean:
-  check_disconnection:
+  check_shedding:
     initial: "off"
 
 automation:
@@ -110,36 +110,36 @@ automation:
         {% from 'power_control.jinja' import power_control %}
         {{ (power_control() | from_json)['Watt Sensor'] }}
     trigger:
-      - alias: "Exceeding threshold 2 minutes before disconnection"
+      - alias: "Exceeding threshold 2 minutes before shedding"
         platform: template
         value_template: >-
-          {% set finishes_at = state_attr('timer.load_disconnection', 'finishes_at') %}
+          {% set finishes_at = state_attr('timer.load_shedding', 'finishes_at') %}
           {% if finishes_at %}
               {{ now() > as_datetime(finishes_at) - timedelta(minutes=2) }}
           {% else %}
               False
           {% endif %}
-        id: disconnection_warning
-      - alias: "Reached threshold for disconnection starts timer"
+        id: shedding_warning
+      - alias: "Reached threshold for shedding starts timer"
         platform: template
         value_template: >-
           {% from 'power_control.jinja' import power_control %}
           {% set power = states[(power_control() | from_json)['Watt Sensor']].state | int(0) %}
-            {{ power > states('input_number.load_disconnection') | int(0) }}
-        id: disconnection_threshold
-      - alias: "Start URGENT load disconnection"
+            {{ power > states('input_number.load_shedding') | int(0) }}
+        id: shedding_threshold
+      - alias: "Start URGENT load shedding"
         platform: template
         value_template: >-
           {% from 'power_control.jinja' import power_control %}
           {% set power = states[(power_control() | from_json)['Watt Sensor']].state | int(0) %}
-            {{ power > states('input_number.urgent_disconnection') | int(0) }}
-        id: start_disconnection
-      - alias: "Start load disconnection"
+            {{ power > states('input_number.urgent_shedding') | int(0) }}
+        id: start_shedding
+      - alias: "Start load shedding"
         platform: event
         event_type: timer.finished
         event_data:
-          entity_id: timer.load_disconnection
-        id: start_disconnection
+          entity_id: timer.load_shedding
+        id: start_shedding
       - alias: "Consumption returned to normal, restore loads"
         platform: template
         value_template: >-
@@ -150,9 +150,9 @@ automation:
           seconds: "20"
         id: load_restoration
     action:
-      - alias: Notify threshold exceeded 2 minutes before disconnection
+      - alias: Notify threshold exceeded 2 minutes before 
         if:
-          - "{{ trigger.id == 'disconnection_warning' and states(power) | int(0) < states('input_number.urgent_disconnection') | int(0) }}"
+          - "{{ trigger.id == 'shedding_warning' and states(power) | int(0) < states('input_number.urgent_shedding') | int(0) }}"
         then:
           - alias: SEND NOTIFICATION
             event: customizations
@@ -162,24 +162,24 @@ automation:
               #critical: 1.0
               title: High Consumption
               message: "{{ 'Exceeded ' ~ states(power,  with_unit=true) }}"
-      - alias: Reached threshold for disconnection starts timer
+      - alias: Reached threshold for shedding starts timer
         if:
-          - "{{ trigger.id == 'disconnection_threshold' }}"
+          - "{{ trigger.id == 'shedding_threshold' }}"
         then:
           - alias: Set waiting timer
             action: timer.start
             data:
-              duration: "00:{{ states('input_number.load_disconnection_delay') | int(0) }}:00"
+              duration: "00:{{ states('input_number.load_shedding_delay') | int(0) }}:00"
             target:
-              entity_id: timer.load_disconnection
-      - alias: Load disconnection
+              entity_id: timer.load_shedding
+      - alias: Load shedding
         if:
-          - "{{ trigger.id == 'start_disconnection' }}"
+          - "{{ trigger.id == 'start_shedding' }}"
         then:
           - alias: Cancel timer to avoid another trigger
             action: timer.cancel
             target:
-              entity_id: timer.load_disconnection
+              entity_id: timer.load_shedding
           - alias: Clear text list
             action: input_text.set_value
             data:
@@ -190,9 +190,9 @@ automation:
               until:
                 - >-
                   {% from 'power_control.jinja' import power_control %}
-                  {{ states[(power_control() | from_json)['Watt Sensor']].state | int(0) > states('input_number.load_disconnection') | int(0) }}
+                  {{ states[(power_control() | from_json)['Watt Sensor']].state | int(0) > states('input_number.load_shedding') | int(0) }}
               sequence:
-                - alias: Execute loop for load disconnection
+                - alias: Execute loop for load shedding
                   repeat:
                     count: >-
                       {% from 'power_control.jinja' import dict_device %}
@@ -213,15 +213,15 @@ automation:
                               - alias: Check if consumption is still high
                                 condition: template
                                 value_template: >-
-                                  {{ states(power) | int(0) > states('input_number.load_disconnection') | int(0) }}
+                                  {{ states(power) | int(0) > states('input_number.load_shedding') | int(0) }}
                               - alias: Check if there are devices in use
                                 condition: template
                                 value_template: "{{ device_on | count > 0 }}"
                             sequence:
-                              - alias: Activate boolean to know load disconnection has been activated
+                              - alias: Activate boolean to know load shedding has been activated
                                 action: input_boolean.turn_on
                                 target:
-                                  entity_id: input_boolean.check_disconnection
+                                  entity_id: input_boolean.check_shedding
                               - alias: "Save devices : power"
                                 action: input_text.set_value
                                 data:
@@ -242,31 +242,31 @@ automation:
                                 action: homeassistant.turn_off
                                 target:
                                   entity_id: "{{ (device_on)[0] }}"
-                              - alias: Delay next disconnection check
+                              - alias: Delay next shedding check
                                 delay:
                                   seconds: 20
                         default:
                           - alias: Check if consumption is still high
                             condition: template
-                            value_template: "{{ states(power) | int(0) > states('input_number.load_disconnection') | int(0) }}"
+                            value_template: "{{ states(power) | int(0) > states('input_number.load_shedding') | int(0) }}"
                           - alias: SEND NOTIFICATION
                             event: customizations
                             event_data:
                               types: notify_power_control
                               tag: helper2power
                               message: "{{ 'WARNING. Exceeded ' ~ states(power,  with_unit=true) ~ '! No appliances to turn off.' }}"
-                          - stop: END DISCONNECTION DUE TO LACK OF DEVICES
+                          - stop: END SHEDDING DUE TO LACK OF DEVICES
       - alias: Load restoration
         if:
           - "{{ trigger.id == 'load_restoration' }}"
         then:
           - action: timer.cancel
             target:
-              entity_id: timer.load_disconnection
+              entity_id: timer.load_shedding
           - if:
-              - alias: Check if load disconnection has occurred
+              - alias: Check if load shedding has occurred
                 condition: template
-                value_template: "{{ is_state('input_boolean.check_disconnection', 'on') }}"
+                value_template: "{{ is_state('input_boolean.check_shedding', 'on') }}"
             then:
               - variables:
                   device_off: >-
@@ -286,7 +286,7 @@ automation:
                     - wait_template: >-
                         {% set device_power = device_off[repeat.index - 1] %}
                         {% if device_power is number %}
-                        {{ (device_power | int(0) + states(power) | int(0)) < states('input_number.load_disconnection') | int(0) }}
+                        {{ (device_power | int(0) + states(power) | int(0)) < states('input_number.load_shedding') | int(0) }}
                         {% else %} 
                         true
                         {% endif %}
@@ -320,4 +320,4 @@ automation:
               - alias: Set boolean to off to indicate restoration
                 action: input_boolean.turn_off
                 target:
-                  entity_id: input_boolean.check_disconnection
+                  entity_id: input_boolean.check_shedding

@@ -1,18 +1,18 @@
 input_number:
-  costo_energia_casa:
+  home_energy_cost:
     name: Home Energy Cost
     min: 0.000
     max: 99999.000
-    unit_of_measurement: "€"
+    unit_of_measurement: "$"
     step: 0.01
     mode: box
-    icon: mdi:currency-eur
+    icon: mdi:currency-usd
 
 
 input_boolean:
   winter_summer:
     name: Winter Summer
-  modo_ospite:
+  guest_mode:
     name: Guest Mode
 
 template:

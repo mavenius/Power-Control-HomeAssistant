@@ -22,11 +22,11 @@ Now, with these clear insights in mind, we can properly configure the power cont
 
 During the device control process, specific checks are performed to determine if a device is actually in use. It is verified whether the device has a power consumption sensor (device_class power), and if so, whether the consumption exceeds the threshold of 15 W. This check helps identify if the device is actually drawing power. In the case where a device does not have a power consumption sensor, only the device's state is considered to determine if it is on or off.
 
-The system operates as follows: two minutes before reaching the set threshold for power disconnection, a high consumption warning notification is sent to allow for manual management by the user. After the two minutes have elapsed and if the consumption remains high, the devices are sequentially turned off from the list, with a 20-second interval between each. During each shutdown phase, a notification is sent to keep the user informed about the process status. In the event that the consumption remains high but no devices are found to be on in the list, a notification is sent to alert the user of the occurrence.
+The system operates as follows: two minutes before reaching the set threshold for power shedding, a high consumption warning notification is sent to allow for manual management by the user. After the two minutes have elapsed and if the consumption remains high, the devices are sequentially turned off from the list, with a 20-second interval between each. During each shutdown phase, a notification is sent to keep the user informed about the process status. In the event that the consumption remains high but no devices are found to be on in the list, a notification is sent to alert the user of the occurrence.
 
 If the emergency threshold is exceeded, the system acts immediately without considering the elapsed time. If an active device is detected, the devices are sequentially turned off.
 
-Once the energy consumption falls below the preset disconnection threshold for the specified time, the system initiates the restoration process. The devices are reactivated in reverse order from the sequence in which they were turned off, taking into account the power consumption they had when they were turned off, with notifications sent to inform the user about the restoration status. Specific devices can be excluded from the restoration by selecting them through a dedicated selection menu. At the end of the restoration process, a final notification is sent to confirm that all devices have been successfully reactivated and that the energy consumption has returned to normal.
+Once the energy consumption falls below the preset shedding threshold for the specified time, the system initiates the restoration process. The devices are reactivated in reverse order from the sequence in which they were turned off, taking into account the power consumption they had when they were turned off, with notifications sent to inform the user about the restoration status. Specific devices can be excluded from the restoration by selecting them through a dedicated selection menu. At the end of the restoration process, a final notification is sent to confirm that all devices have been successfully reactivated and that the energy consumption has returned to normal.
 
 NB:
 
@@ -156,11 +156,11 @@ The card has 4 buttons at the bottom, each of which has a specific function. Bel
 
 	- Load Shedding Delay: This option allows you to specify a waiting time, expressed in minutes, after which load shedding will be initiated. When the specified time elapses, the system will start disconnecting the connected devices.
 
-	- Load shedding: This setting requires a value, expressed in watts (W), which is the threshold above which the system will perform the disconnection of appliances. If the total power of the loads exceeds this value, the system will initiate the disconnection of the devices.
+	- Load shedding: This setting requires a value, expressed in watts (W), which is the threshold above which the system will perform the shedding of appliances. If the total power of the loads exceeds this value, the system will initiate the shedding of the devices.
 
 	- Load Restore: This option allows you to set a value expressed in watts (W), which is the threshold below which devices will be automatically reactivated. The system will start the reactivation process of the previously deactivated devices with an interval of 20 seconds between each reactivation, provided that the instantaneous absorption is less than the set value.
 
-	- Urgent Disconnection:  This value should be higher than "Load Shedding" and allows the last appliance in the list to be turned off immediately if it is turned on within 30 seconds. On the other hand, if the last appliance is not turned on within this time interval, the order of the list for detaching the other loads will be respected.
+	- Urgent Shedding:  This value should be higher than "Load Shedding" and allows the last appliance in the list to be turned off immediately if it is turned on within 30 seconds. On the other hand, if the last appliance is not turned on within this time interval, the order of the list for detaching the other loads will be respected.
 
 
 ![setting](example/setting.png)
@@ -199,7 +199,7 @@ Thank you very much for your support!
 				False
 			{% endif %}
 		```
-	- The logic of restarting loads has been modified. Now, instead of relying only on the disconnection threshold, a reactivation threshold has been added to avoid unwanted continuous cycling. In addition, a fixed time of 20 seconds has been set for power-up between loads.
+	- The logic of restarting loads has been modified. Now, instead of relying only on the shedding threshold, a reactivation threshold has been added to avoid unwanted continuous cycling. In addition, a fixed time of 20 seconds has been set for power-up between loads.
 
 #### **Version: 1.5:**
 
