@@ -54,17 +54,17 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 	[
 		{
 			"person": "person.marco",
-			"battery": "sensor.cellulare_marco_battery_level",
-			"notify": "mobile_app_cellulare_marco",
-			"sveglia": "sensor.cellulare_marco_prossimo_allarme",
-			"cellulare": "331000000"
+			"battery": "sensor.mobile_phone_marco_battery_level",
+			"notify": "mobile_app_mobile_phone_marco",
+			"sveglia": "sensor.mobile_phone_marco_next_alarm",
+			"mobile_phone": "331000000"
 		},
 		{
 			"person": "person.serena",
-			"battery": "sensor.cellulare_serena_livello_della_batteria",
+			"battery": "sensor.mobile_phone_serena_battery_level",
 			"notify": "mobile_app_samsung_s21",
 			"sveglia": "none",
-			"cellulare": "335000000"
+			"mobile_phone": "335000000"
 		}
 	]
 	{% endmacro%}
@@ -75,12 +75,12 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 	{% macro media_players(type) %}
 		{% set list_media = 
 			[
-				'media_player.camera',
-				'media_player.studio',
-				'media_player.googlehome_cameretta', 
-				'media_player.googlehome_bagno',
-				'media_player.googlehome_cucina',
-				'media_player.googlehome_salone'
+				'media_player.room',
+				'media_player.study',
+				'media_player.googlehome_bedroom', 
+				'media_player.googlehome_bathroom',
+				'media_player.googlehome_kitchen',
+				'media_player.googlehome_livingroom'
 			]
 		%}
 		{% for integrations in integration_entities(type) if integrations in list_media %}
@@ -95,13 +95,13 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 
 	```
 		{% set list_entities = 
-			[
-				'switch.idromassaggio',
-				'climate.camera_ac',
-				'climate.salotto',
-				'climate.condizionatore_salone',
-				'switch.lavatrice1pm',
-				'switch.forno'
+			[  
+			'switch.jacuzzi',
+			'climate.bedroom_ac',
+			'climate.living_room',
+			'light.table_lamp',
+			'climate.hall_air_conditioner',
+			'switch.washing_machine_1pm'
 			]
 		%}
 	```
@@ -112,7 +112,7 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 	```
 	{% macro power_control() %}
 		{
-			"Sensore W": "sensor.shelly_em_assorbimento_casa"
+			"Watt Sensor": "sensor.general_power"
 		}
 	{% endmacro %}
 	```
