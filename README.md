@@ -56,14 +56,14 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 			"person": "person.marco",
 			"battery": "sensor.mobile_phone_marco_battery_level",
 			"notify": "mobile_app_mobile_phone_marco",
-			"sveglia": "sensor.mobile_phone_marco_next_alarm",
+			"alarm": "sensor.mobile_phone_marco_alarm",
 			"mobile_phone": "331000000"
 		},
 		{
 			"person": "person.serena",
 			"battery": "sensor.mobile_phone_serena_battery_level",
 			"notify": "mobile_app_samsung_s21",
-			"sveglia": "none",
+			"alarm": "none",
 			"mobile_phone": "335000000"
 		}
 	]
@@ -117,7 +117,7 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 	{% endmacro %}
 	```
 
-At this point, you can upload the folder [power_control](packages/power_control) and the file [entities_generali](packages/entities_generali.yaml) into the 'packages' directory and restart Home Assistant.
+At this point, you can upload the folder [power_control](packages/power_control) and the file [general_entities](packages/general_entities.yaml) into the 'packages' directory and restart Home Assistant.
 
 ### **Card:**
 
@@ -209,7 +209,7 @@ Thank you very much for your support!
 - Fixed issue preventing exclusion of devices from load restoration.
 - Changed sensor.marquee_power_control.
 - Changed power variable used by the automation.
-- Added entities_generali.yaml file containing entities used in all packages of this GitHub repository.
+- Added general_entities.yaml file containing entities used in all packages of this GitHub repository.
 
 #### **Version: 2.0:**
 
