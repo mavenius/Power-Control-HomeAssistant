@@ -1,6 +1,6 @@
 type: custom:button-card
 variables:
-  power_meter: sensor.generale_power
+  power_meter: sensor.general_power
 triggers_update: all
 styles:
   card:
@@ -31,7 +31,7 @@ custom_fields:
           if (states['sensor.marquee_power_control'].state !== 'unknown') { 
             return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px;"><span style='color: var(--secondary-text-color);'>${states['sensor.marquee_power_control'].state}</span></marquee>`; 
           } else { 
-            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px;"><span style='color: var(--secondary-text-color);'>In attesa della prima attivazione</span></marquee>`; 
+            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px;"><span style='color: var(--secondary-text-color);'>Waiting for first activation</span></marquee>`; 
           } 
         ]]]
   watt:
@@ -39,7 +39,7 @@ custom_fields:
       type: custom:button-card
       label: |
         [[[ 
-            return 'Istantaneo '+ states[variables.power_meter].state + 'W'; 
+            return 'Instantaneous '+ states[variables.power_meter].state + 'W'; 
         ]]]
       show_label: true
       tap_action:
@@ -71,29 +71,29 @@ custom_fields:
         timer:
           card:
             type: custom:button-card
-            entity: timer.distacco_carico
+            entity: timer.load_shedding
             layout: name_state
             name: |
               [[[ 
-                if (states['input_boolean.check_distacco'].state === 'on') { 
-                  return 'Protezione in corso 🛡️ '; } 
-                else if (states['timer.distacco_carico'].state !== 'idle') { 
-                  return 'Distacco tra '; }
+                if (states['input_boolean.check_shedding'].state === 'on') { 
+                  return 'Protection in Progress 🛡️ '; } 
+                else if (states['timer.load_shedding'].state !== 'idle') { 
+                  return 'Disconnection in '; }
                 else { 
-                  return 'Assorbimento: Ok👍'; } 
+                  return 'Absorption: Ok 👍'; } 
               ]]]
             show_icon: false
             show_state: |
               [[[ 
-                return (states['timer.distacco_carico'].state !== 'idle'); 
+                return (states['timer.load_shedding'].state !== 'idle'); 
               ]]]
             styles:
               card:
                 - background-color: |
                     [[[ 
-                      if (states['input_boolean.check_distacco'].state === 'on') { 
+                      if (states['input_boolean.check_shedding'].state === 'on') { 
                         return 'Chocolate'; } 
-                      else if (states['timer.distacco_carico'].state !== 'idle') { 
+                      else if (states['timer.load_shedding'].state !== 'idle') { 
                         return 'red'; } 
                       else { 
                         return 'var(--disabled-text-color)';} 
@@ -113,8 +113,8 @@ custom_fields:
       entity: automation.power_control
       name: |
         [[[ 
-        if (states['automation.power_control'].state == 'on') return "Attivo"; 
-        else return "Spento"; 
+        if (states['automation.power_control'].state == 'on') return "Active"; 
+        else return "Off"; 
         ]]]
       icon: |
         [[[ 
@@ -198,7 +198,7 @@ custom_fields:
         browser_mod:
           service: browser_mod.popup
           dismissable: true
-          right_button: Chiudi
+          right_button: Close
           data:
             card_mod:
               style: |
@@ -229,15 +229,15 @@ custom_fields:
                       }
                   content: >-
                     ```  {% if
-                    state_attr('sensor.dispositivi_esclusi_dal_ripristino_carico',
+                    state_attr('sensor.devices_excluded_from_load_restoration',
                     'list_exclude') is not none and
-                    state_attr('sensor.dispositivi_esclusi_dal_ripristino_carico',
+                    state_attr('sensor.devices_excluded_from_load_restoration',
                     'list_exclude')|count != 0 %} {% for t in
-                    state_attr('sensor.dispositivi_esclusi_dal_ripristino_carico',
+                    state_attr('sensor.devices_excluded_from_load_restoration',
                     'list_exclude') %}  
                       {{ states[t].name -}}  
                     {% endfor %}  {% else %}
-                        Nessuno
+                        None
                     {% endif %}
                 - type: markdown
                   style: |
@@ -247,11 +247,11 @@ custom_fields:
                       border-radius: 0px;
                       }
                   content: |-
-                    **<center>Lista carichi<center>**
+                    **<center>Load List<center>**
                     {% from 'power_control.jinja' import dict_device %}
                     {% set my_dict = (dict_device() | from_json)  %}  
 
-                    | Dispositivo &nbsp;| Stato &nbsp;| Consumo  |
+                    | Device &nbsp;| State &nbsp;| Consumption  |
                     |:--------|:---------:|:-------------:|
                     |{% for device_name, device_info in my_dict.items() %}
                       | {{ device_name }} &nbsp;  | {{ device_info['state'] | upper }} &nbsp; |  {{ device_info['power'] ~ ' W' if device_info['power']  != 'sconosciuto'}} | 
@@ -280,7 +280,7 @@ custom_fields:
         browser_mod:
           service: browser_mod.popup
           dismissable: true
-          right_button: Chiudi
+          right_button: Close
           data:
             card_mod:
               style: |
@@ -295,9 +295,9 @@ custom_fields:
                   - border-radius: 20px
                 grid:
                   - grid-template-areas: |-
-                      " . tempi     soglie        . " 
-                      " . rit_dist  dis_carichi   . "   
-                      " . rit_ripr  dis_emergenza . "
+                      " . times     values        . " 
+                      " . disconnect_delay  load_disconnect   . "   
+                      " . restore_delay  emergency_disconnect . "
                   - grid-template-columns: 0.1vw repeat(2, 1fr) 0.1vw
                   - grid-column-gap: 0.3em
                   - grid-row-gap: 0.3em
@@ -310,7 +310,7 @@ custom_fields:
                         border: 100px;  
                         }
                     type: custom:button-card
-                    name: Tempi
+                    name: Times
                     styles:
                       name:
                         - font-weight: bolder
@@ -319,7 +319,7 @@ custom_fields:
                 rit_dist:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.ritardo_distacco_carico
+                    entity: input_number.load_disconnection
                     layout: vertical
                     icon_color: green
                     tap_action:
@@ -337,7 +337,7 @@ custom_fields:
                 rit_ripr:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.ripristino_carico
+                    entity: input_number.load_restoration
                     layout: vertical
                     icon_color: red
                     tap_action:
@@ -360,7 +360,7 @@ custom_fields:
                         border: 100px;  
                         }
                     type: custom:button-card
-                    name: Valori
+                    name: Values
                     styles:
                       name:
                         - font-weight: bolder
@@ -369,7 +369,7 @@ custom_fields:
                 dis_carichi:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.distacco_carico
+                    entity: input_number.load_disconnection
                     layout: vertical
                     card_mod:
                       style: |
@@ -380,7 +380,7 @@ custom_fields:
                 dis_emergenza:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.distacco_urgente
+                    entity: input_number.urgent_disconnection
                     layout: vertical
                     tap_action:
                       action: none
@@ -421,44 +421,4 @@ custom_fields:
           - color: |
               [[[  
                 if (states['automation.notify_control_power_push'].state == 'on') return "white   ";  
-                else return "dimGray"; 
-              ]]]
-      tap_action:
-        action: call-service
-        service: automation.toggle
-        service_data:
-          entity_id: automation.notify_control_power_push
-  media:
-    card:
-      type: custom:button-card
-      color: transparent
-      show_name: false
-      icon: |
-        [[[  
-        if (states['automation.notify_control_power_media_player'].state == 'on') return "mdi:account-voice";  
-        else return "mdi:speaker-off";  
-        ]]]
-      styles:
-        card:
-          - background-color: |
-              [[[  
-                if (states['automation.notify_control_power_media_player'].state == 'on') return "var(--primary-color)";  
-                else return "var(--disabled-color)"; 
-              ]]]
-          - border-radius: 18px
-          - border-style: none
-          - box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.2)
-          - width: 70px
-          - aspect-ratio: 1/0.7
-        icon:
-          - align-self: center
-          - color: |
-              [[[  
-                if (states['automation.notify_control_power_media_player'].state == 'on') return "white   ";  
-                else return "dimGray"; 
-              ]]]
-      tap_action:
-        action: call-service
-        service: automation.toggle
-        service_data:
-          entity_id: automation.notify_control_power_media_player
+                else return "dimGray

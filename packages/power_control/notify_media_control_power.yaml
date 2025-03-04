@@ -1,12 +1,12 @@
 homeassistant:
   customize:
     package.node_anchors:
-    # se orario inizio e fine vengono impostati entrambi in 00:00:00 le notifiche media_player saranno attive h24
-      orario inizio notifica: &hours_start "09:00:00"
-      orario fine notifica: &hours_end "22:00:00"
+    # if start and end times are both set to 00:00:00, media_player notifications will be active 24/7
+      notification start time: &hours_start "09:00:00"
+      notification end time: &hours_end "22:00:00"
 
 ##############################################################
-#         DA QUESTO PUNTO NON MODIFICARE
+#         FROM THIS POINT DO NOT MODIFY
 ##############################################################
 automation:
   - alias: notify_control_power_media_player
@@ -16,7 +16,7 @@ automation:
       volume: 0.4
       alexa: "{{ states.media_player | selectattr('attributes.source','eq','Local Speaker') | map(attribute='entity_id') | select('in', integration_entities('alexa_media')) | list }}"
       google: "{{ states.media_player | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'speaker') | map(attribute='entity_id') | select('in', integration_entities('cast')) | list }}"
-      volume_media_player: "{{ state_attr('sensor.volumi_media_player', 'list_device').values() | list }}"
+      volume_media_player: "{{ state_attr('sensor.media_player_volumes', 'list_device').values() | list }}"
     trigger:
       - platform: event
         event_type: customizations
@@ -27,12 +27,12 @@ automation:
         after: *hours_start
         before: *hours_end
     action:
-      - alias: Imposta volume Notifica
+      - alias: Set Notification Volume
         action: media_player.volume_set
         data:
           entity_id: "{{ google + alexa }}"
           volume_level: "{{ trigger.event.data.volume | default(volume) }}"
-      - alias: INVIA NOTIFICA
+      - alias: SEND NOTIFICATION
         parallel:
           - alias: GOOGLE
             if: "{{ google | count > 0 }}"
@@ -40,7 +40,7 @@ automation:
               - action: tts.google_translate_say
                 data:
                   entity_id: "{{ google }}"
-                  message: "{{ trigger.event.data.message | default('Messaggio non impostato') }}"
+                  message: "{{ trigger.event.data.message | default('Message not set') }}"
           - alias: ALEXA
             if: >-
               {{ alexa | count > 0}}
@@ -50,13 +50,13 @@ automation:
                   target: "{{ alexa }}"
                   data:
                     method: spoken
-                  message: "{{ trigger.event.data.message | default('Messaggio non impostato') }}"
+                  message: "{{ trigger.event.data.message | default('Message not set') }}"
       - delay:
           seconds: "{{ (5 + (trigger.event.data.message | regex_replace('[a-zA-Z0-9]', '')).split()|count * 0.35 + trigger.event.data.message | count * 0.06) | round(0, default=5) }}"
       - repeat:
           for_each: "{{ alexa + google }}"
           sequence:
-            - alias: Imposta volume Notifica
+            - alias: Set Notification Volume
               action: media_player.volume_set
               data:
                 entity_id: "{{ repeat.item }}"

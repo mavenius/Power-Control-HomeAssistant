@@ -1,6 +1,6 @@
 input_number:
   costo_energia_casa:
-    name: Costo Energia Casa
+    name: Home Energy Cost
     min: 0.000
     max: 99999.000
     unit_of_measurement: "€"
@@ -11,13 +11,13 @@ input_number:
 
 input_boolean:
   winter_summer:
-    name: Inverno estate
+    name: Winter Summer
   modo_ospite:
-    name: Modalità ospite
+    name: Guest Mode
 
 template:
   - sensor:
-      - name: Cambio volume media player
+      - name: Media Player Volume Change
         state: >-
           {% set google = states.media_player | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'speaker') | map(attribute='entity_id') | select('in', integration_entities('cast')) | list %}
           {% set alexa = states.media_player | selectattr('attributes.source','eq','Local Speaker') | map(attribute='entity_id') | select('in', integration_entities('alexa_media')) | list %}
@@ -27,7 +27,7 @@ template:
       - platform: state
         entity_id: sensor.cambio_volume_media_player
     sensor:
-      - name: Volumi media player
+      - name: Media Player Volumes
         state: "{{ now() }}"
         attributes:
           list_device: >-

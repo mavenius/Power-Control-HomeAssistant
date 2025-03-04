@@ -1,145 +1,182 @@
 # Power-Control
 
-`- Version: 2.2 -`
+`- Version: 2.0 -`
 
-![Immagine 2023-09-27 162710](https://github.com/Home-Assistant-Pro-Team/Power-Control-HomeAssistant/assets/48358142/278205a3-d6dd-4d7a-b5b5-9ea713940687)
+The package was written in Italian, and has been programmatically translated here. We apologize for any translation errors.
 
-Il power control è un sistema che permette di gestire l'alimentazione elettrica in modo efficiente, prevenendo sovraccarichi e interruzioni di corrente. Il suo obiettivo principale è regolare il consumo di energia spegnendo i dispositivi in base alla potenza richiesta, evitando così il superamento dei limiti imposti e garantendo la stabilità del sistema elettrico. Inoltre, il sistema è in grado di riaccendere i dispositivi precedentemente spenti quando il consumo torna nella norma.
+
+The power control is a system that allows for the efficient management of electrical power, preventing overloads and power interruptions. Its main objective is to regulate energy consumption by shutting down devices based on the required power, thereby avoiding exceeding set limits and ensuring the stability of the electrical system. Additionally, the system is capable of reactivating previously shut down devices when consumption returns to normal.
 
 <https://github.com/Home-Assistant-Pro-Team/Power-Control/assets/62516592/9c10e918-f4c3-4458-83e7-35cc3fe0f49f>
 
-È importante avere un'idea chiara di come funziona la fornitura elettrica nella maggior parte dei casi. Prendiamo ad esempio un contratto di 3 kW: la potenza effettivamente disponibile sarà di 3,3 kW, che include una riserva del 10% per gestire eventuali picchi di consumo. Tuttavia, è possibile utilizzare temporaneamente una potenza superiore con una tolleranza del 33%, che equivale a 3.990 W, per un massimo di 180 minuti. Durante questo periodo, vengono effettuati tre controlli per verificare il rispetto dei limiti di potenza.
+It is important to have a clear understanding of how electrical supply works in most cases. Let's take, for example, a 3 kW contract: the actual available power will be 3.3 kW, which includes a 10% reserve to manage any consumption peaks. However, it is possible to temporarily use a higher power with a tolerance of 33%, which amounts to 3,990 W, for a maximum of 180 minutes. During this period, three checks are carried out to verify compliance with the power limits.
 
-| Potenza  | Effettiva | Tolleranza 33% |
+| Power    | Effective | 33% Tolerance  |
 | -------- | --------- | -------------- |
 | 3.0 kW   | 3.3 kW    | 3990 W         |
 | 4.5 kW   | 4.9 kW    | 5980 W         |
 | 6.0 kW   | 6.6 kW    | 7980 W         |
 
-Ora, con queste informazioni chiare in mente, possiamo impostare correttamente il pacchetto di power control. Ciò che rende questo pacchetto particolare è la sua versatilità: i dispositivi che possono essere inclusi nella lista di controllo possono appartenere a diversi domini, come switch, light, fan, climate, media_player, ecc. Non ci sono limiti al numero di dispositivi che possono essere inseriti nella lista. Durante il processo di controllo dei dispositivi, vengono eseguiti controlli specifici per determinare se un dispositivo è effettivamente in uso. Si verifica se il dispositivo dispone di un sensore di consumo energetico (device_class power) e, in tal caso, se il consumo supera la soglia di 15 W. Questo controllo consente di identificare se il dispositivo sta effettivamente assorbendo energia. Nel caso in cui un dispositivo non disponga di un sensore di consumo energetico, viene considerato solo lo stato del dispositivo stesso per determinare se è attivo o spento.
 
-Il funzionamento del sistema è il seguente: due minuti prima di raggiungere la soglia impostata per il distacco di potenza, viene inviata una notifica di avviso di consumo elevato per permettere una gestione manuale da parte dell'utente. Trascorsi i due minuti e se il consumo rimane ancora elevato, i dispositivi vengono spenti in ordine sequenziale dalla lista, con un intervallo di 20 secondi tra uno e l'altro. Durante ciascuna fase di spegnimento, viene inviata una notifica per restare informato sullo stato del processo. Nel caso in cui il consumo rimanga elevato ma non risultino dispositivi accesi nella lista, viene inviata una notifica per avvisare l'utente dell'evento.
+Now, with these clear insights in mind, we can properly configure the power control package. What makes this package unique is its versatility: the devices that can be included in the control list may belong to different domains, such as switch, light, fan, climate, media_player, etc. There are no limits to the number of devices that can be added to the list.
 
-Se si supera la soglia di emergenza, il sistema agisce immediatamente senza considerare il tempo trascorso. Se viene rilevato un dispositivo attivo, i dispositivi vengono spenti in ordine sequenziale.
+During the device control process, specific checks are performed to determine if a device is actually in use. It is verified whether the device has a power consumption sensor (device_class power), and if so, whether the consumption exceeds the threshold of 15 W. This check helps identify if the device is actually drawing power. In the case where a device does not have a power consumption sensor, only the device's state is considered to determine if it is on or off.
 
-Una volta che il consumo energetico scende sotto la soglia di distacco per il tempo preimpostato, il sistema avvia il processo di ripristino. I dispositivi vengono riattivati in ordine inverso rispetto all'ordine in cui sono stati spenti **tenendo in considerazione l'assorbimento che avevano quando sono stati spenti**, con notifiche inviate per informare l'utente sullo stato del ripristino. È possibile escludere specifici dispositivi dal ripristino selezionandoli attraverso un menu di selezione dedicato. Al termine del processo di ripristino, viene inviata un'ultima notifica per confermare che tutti i dispositivi sono stati correttamente riattivati e che il consumo energetico è tornato nella norma.
+The system operates as follows: two minutes before reaching the set threshold for power disconnection, a high consumption warning notification is sent to allow for manual management by the user. After the two minutes have elapsed and if the consumption remains high, the devices are sequentially turned off from the list, with a 20-second interval between each. During each shutdown phase, a notification is sent to keep the user informed about the process status. In the event that the consumption remains high but no devices are found to be on in the list, a notification is sent to alert the user of the occurrence.
+
+If the emergency threshold is exceeded, the system acts immediately without considering the elapsed time. If an active device is detected, the devices are sequentially turned off.
+
+Once the energy consumption falls below the preset disconnection threshold for the specified time, the system initiates the restoration process. The devices are reactivated in reverse order from the sequence in which they were turned off, taking into account the power consumption they had when they were turned off, with notifications sent to inform the user about the restoration status. Specific devices can be excluded from the restoration by selecting them through a dedicated selection menu. At the end of the restoration process, a final notification is sent to confirm that all devices have been successfully reactivated and that the energy consumption has returned to normal.
 
 NB:
 
-- Le notifiche push verranno inviate solo alle persone che si trovano in casa.
-- Il packages non prende in considerazione lo stato dell'assorbimento nel caso di dispositivi "multiswitch", es. shelly 4pm.
+- The push notifications will be sent only to the people who are currently at home
+- The package does not take into account the power consumption status in the case of 'multiswitch' devices, e.g., Shelly 4PM.
 
-### **Requisiti packages**
+### **Requirements packages**
+- [HomeAssitant release 2024.3 ](https://rc.home-assistant.io/blog/2024/03/06/release-20243/)
+- [Package Folder Enabled](https://www.home-assistant.io/docs/configuration/packages/)
+- The device for general household consumption control is the Shelly EM.
 
-- [HomeAssitant release 2024.7.0](https://rc.home-assistant.io/blog/2024/07/03/release-20247/)
-- [Cartella Package abilitata](https://www.home-assistant.io/docs/configuration/packages/)
-- Dispositivo per controllo consumo generale casa es shelly em.
-
-### **Installazione:**
-
-Per l'installazione, è necessario caricare la cartella [custom_templates](custom_templates) nella directory "conf" di Home Assistant. Se la cartella esiste già, è sufficiente copiare al suo interno solo i file.
+### **Installation:**
+For installation, you need to load the "custom_templates" folder in the "conf" directory of Home Assistant. If the folder already exists, you only need to copy the files into it.
 
 - **personal.jinja**
 
-	Questo file è utilizzato per altri progetti all'interno di questo repository GitHub. Nel file, impostiamo dati personali che verranno utilizzati in tutti i progetti.
-	
-	Solo nel caso si vogliano usare utilizzare le chiamate voip è necessario complilare manualmente il dizionario 'person.xx' : 'numero'.
+    This file will be used for other projects within this GitHub repository. In the file, we set up personal data that will be used in all projects. Simply enter your entities respecting the JSON indentation.
+
+	Let's see how to customize it. Although not all information is required for this package, it is advisable to fill in all fields to take full advantage of it in other projects.
+
+	In this section, we define the entities and sensors for each person. If you do not want to associate a cell phone number or an alarm sensor with a specific person, simply assign the value "none" in the corresponding section of the file. To add or remove people from the dictionary list, you need to pay attention to the JSON syntax.
 
 	```
 	{% macro persons() %}
-	{% set numero = { 
-	'person.marco' : '33100000',
-	'person.tata' : '3340000000' 
-			} %}
-    ...............
+	[
+		{
+			"person": "person.marco",
+			"battery": "sensor.cellulare_marco_battery_level",
+			"notify": "mobile_app_cellulare_marco",
+			"sveglia": "sensor.cellulare_marco_prossimo_allarme",
+			"cellulare": "331000000"
+		},
+		{
+			"person": "person.serena",
+			"battery": "sensor.cellulare_serena_livello_della_batteria",
+			"notify": "mobile_app_samsung_s21",
+			"sveglia": "none",
+			"cellulare": "335000000"
+		}
+	]
+	{% endmacro%}
 	```
+    In this section, we will list our media players used for notifications. Be sure to correctly enter the selected media players for Alexa and TTS notifications (e.g., Google), carefully following the correct syntax.
 
+	```
+	{% macro media_players(type) %}
+		{% set list_media = 
+			[
+				'media_player.camera',
+				'media_player.studio',
+				'media_player.googlehome_cameretta', 
+				'media_player.googlehome_bagno',
+				'media_player.googlehome_cucina',
+				'media_player.googlehome_salone'
+			]
+		%}
+		{% for integrations in integration_entities(type) if integrations in list_media %}
+			{{ integrations }}
+		{% endfor %}
+	{% endmacro %}
+	```
 
 - **power_control.jinja**
 
- In questo [file](custom_templates/power_control.jinja), è sufficiente inserire le proprie entità dei dispositivi che si desidera spegnere, in ordine di sequenza di priorità. Il primo dispositivo nella lista sarà il primo ad essere spento (se acceso), seguito dal secondo dispositivo e così via.
+    In this file, simply enter your entities of the devices you wish to turn off, in order of priority sequence. The first device in the list will be the first to be turned off (if turned on), followed by the second device, and so on.
 
- ```
-   {% set list_entities = 
-   [
-    'switch.idromassaggio',
-    'climate.camera_ac',
-    'climate.salotto',
-    'climate.condizionatore_salone',
-    'switch.lavatrice1pm',
-    'switch.forno'
-   ]
-  %}
- ```
+	```
+		{% set list_entities = 
+			[
+				'switch.idromassaggio',
+				'climate.camera_ac',
+				'climate.salotto',
+				'climate.condizionatore_salone',
+				'switch.lavatrice1pm',
+				'switch.forno'
+			]
+		%}
+	```
 
- Inoltre, è necessario inserire il sensore che misura l'assorbimento istantaneo generale di casa, espresso in watt (W).
+	In addition, it is necessary to insert the sensor that measures the instantaneous general household absorption, expressed in watts (W).
 
- ```
- {% macro power_control() %}
-  {
-   "Sensore W": "sensor.shelly_em_assorbimento_casa"
-  }
- {% endmacro %}
- ```
 
-A questo punto, puoi caricare la cartella [power_control](packages/power_control) ed il file [entities_generali](packages/entities_generali.yaml) nella directory "packages" e riavviare Home Assistant.
+	```
+	{% macro power_control() %}
+		{
+			"Sensore W": "sensor.shelly_em_assorbimento_casa"
+		}
+	{% endmacro %}
+	```
+
+At this point, you can upload the folder [power_control](packages/power_control) and the file [entities_generali](packages/entities_generali.yaml) into the 'packages' directory and restart Home Assistant.
 
 ### **Card:**
 
-#### **Requisiti card:**
+#### **Requirements card:**
 
-- Sensore power (W) incluso nel [recorder](https://www.home-assistant.io/integrations/recorder/)
-- [Browser mode](https://github.com/thomasloven/hass-browser_mod)
+- Power sensor (W) included in the [recorder](https://www.home-assistant.io/integrations/recorder/)
+- [Browser mode](https://github.com/thomasloven/hass-browser_mod) 
 - [Button card](https://github.com/custom-cards/button-card)
 - [Card Mod](https://github.com/thomasloven/lovelace-card-mod)
 - [Apexcharts card](https://github.com/RomRider/apexcharts-card)
 - [Mushroom](https://github.com/piitaya/lovelace-mushroom)
 
-#### **Installazione card:**
 
-Per utilizzare la card, è necessario seguire alcuni semplici passaggi. Iniziamo creando una nuova scheda manuale e copiamo il contenuto del file "[card.txt](card.txt)" ed inseriamo il sensore power utilizzato in precedenza nella variabile power_meter.
+#### **Installation card:**
+To use the card, we need to follow some simple steps. We start by creating a new manual card and copy the contents of the file "[card.txt](card.txt)" and enter the power sensor used previously in the power_meter variable.
 
 ![variables](example/variables.png)
 
-#### **Spiegazione card:**
+#### **Explanation card:**
+It is possible to turn load control on or off by pressing the button.
 
-E' possibile attivare o disattivare il controllo carichi premendo il pulsante.
+![power_on](example/power_on.png)	![power_off](example/power_off.png)
 
-![power_on](example/power_on.png) ![power_off](example/power_off.png)
 
-La card presenta 4 pulsanti nella parte bassa, ognuno dei quali ha una specifica funzione. Qui di seguito l'ordine e la descrizione di ciascun pulsante:
+The card has 4 buttons at the bottom, each of which has a specific function. Below is the order and description of each button:
 
 ![button](example/button.png)
 
-1) Nel popup è possibile escludere dispositivi dal ripristino carico: Questa opzione consente di specificare uno o più dispositivi da escludere dal ripristino automatico dei carichi. In altre parole, i dispositivi selezionati non verranno riaccensi automaticamente dopo un'interruzione per il distacco carichi. Inoltre vengo visualizzati i dispositivi inseriti nel controllo dei carichi.
+
+1) In the popup you can exclude devices from load restoration: This option allows you to specify one or more devices to be excluded from automatic load restoration. In other words, the selected devices will not be automatically turned back on after an interruption for load shedding. In addition, the devices entered in load control are displayed.
+
 
 ![list](example/list.png)
 
-2) Questo popup viene utilizzato per configurare diverse impostazioni relative al sistema di gestione dei carichi. Ecco una spiegazione più dettagliata delle opzioni disponibili:
+2) This popup is used to configure various settings related to the load management system. Here is a more detailed explanation of the available options:
 
-- Ritardo Distacco Carico:  Ritardo Distacco Carico: Questa opzione consente di specificare un tempo di attesa, espresso in minuti, dopo il quale verrà avviato il distacco dei carichi. Quando il tempo specificato trascorre, il sistema inizierà a disattivare i dispositivi collegati.
+	- Load Shedding Delay: This option allows you to specify a waiting time, expressed in minutes, after which load shedding will be initiated. When the specified time elapses, the system will start disconnecting the connected devices.
 
-- Distacco carico: Questa impostazione richiede un valore, espresso in watt (W), che rappresenta la soglia oltre la quale il sistema eseguirà il distacco degli elettrodomestici. Se la potenza totale dei carichi supera questo valore, il sistema avvierà il distacco dei dispositivi.
+	- Load shedding: This setting requires a value, expressed in watts (W), which is the threshold above which the system will perform the disconnection of appliances. If the total power of the loads exceeds this value, the system will initiate the disconnection of the devices.
 
-- Ripristino Carico: Questa opzione consente di impostare un valore espresso in watt (W), che rappresenta la soglia al di sotto della quale i dispositivi verranno riattivati automaticamente. Il sistema avvierà il processo di riaccensione dei dispositivi precedentemente disattivati con un intervallo di 20 secondi tra una riaccensione e l'altra, a condizione che l'assorbimento istantaneo sia inferiore al valore impostato.
+	- Load Restore: This option allows you to set a value expressed in watts (W), which is the threshold below which devices will be automatically reactivated. The system will start the reactivation process of the previously deactivated devices with an interval of 20 seconds between each reactivation, provided that the instantaneous absorption is less than the set value.
 
-- Distacco Urgente:  Questo valore deve essere più alto rispetto al "Distacco Carico" e consente di spegnere immediatamente i dispositivi rispettando l'ordine della lista per il distacco degli altri carichi.
+	- Urgent Disconnection:  This value should be higher than "Load Shedding" and allows the last appliance in the list to be turned off immediately if it is turned on within 30 seconds. On the other hand, if the last appliance is not turned on within this time interval, the order of the list for detaching the other loads will be respected.
+
 
 ![setting](example/setting.png)
 
-3) Questa opzione consente di attivare le notifiche push che verranno inviate solo alle persone che si trovano in casa.
+3) This option enables push notifications that will be sent only to people in the home.
 
-4) Questa funzione permette di abilitare le notifiche per i media player alexa e TTS (es. Google)
+4) This function enables notifications for alexa media players and TTS (e.g., Google)
 
-### **Contributi**
+### **Contributions**
+This project is open for contributions. If you would like to provide feedback, report a bug, or request a new feature, please create an issue on the repository.
 
-Questo progetto è aperto ai contributi. Se vuoi fornire feedback, segnalare un bug o richiedere una nuova funzionalità, ti invitiamo a creare una issue sul repository.
 
-### **Supportaci**
-
-Se hai apprezzato questo progetto, ci piacerebbe avere il tuo supporto. Anche un semplice caffè può fare la differenza.
-I fondi raccolti saranno utilizzati per acquistare nuovo materiale e realizzare nuovi progetti. Puoi contribuire cliccando sul pulsante qui sotto.
-Grazie di cuore per il tuo sostegno!
+### **Support us**
+If you enjoyed this project, we would love to have your support. Even a simple coffee can make a difference. 
+The funds raised will be used to purchase new equipment and carry out new projects. You can contribute by clicking on the button below. 
+Thank you very much for your support!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M1MI00I)
 
@@ -147,60 +184,42 @@ Grazie di cuore per il tuo sostegno!
 
 #### **Version: 1.3:**
 
-- Eliminati due errore (non bloccanti) dal log che apparivano nel momento dell'avvio di HomeAssistant
+	- Removed two (non-blocking) errors from the log that were appearing when HomeAssistant was starting up
+		```
 
-  ```
-
-   {% set a = states('sensor.check_ultimo_acceso').split()|default %}
-   {% set b = state_attr('sensor.check_ultimo_acceso', 'old_state').split()|default %}
-   
-    .................
+			{% set a = states('sensor.check_last_access').split()|default %}
+			{% set b = state_attr('sensor.check_last_access', 'old_state').split()|default %}
+			
+				.................
 
 
-   {% if state_attr('timer.distacco_carico', 'finishes_at') is not none %}
-    {{ now() > as_datetime(state_attr('timer.distacco_carico', 'finishes_at')) - timedelta(minutes=2) }}
-   {% else %}
-    False
-   {% endif %}
-  ```
-  
-- La logica di riaccensione dei carichi è stata modificata. Ora, anziché basarsi solo sulla soglia di distacco, è stata aggiunta una soglia di riattivazione per evitare cicli continui indesiderati. Inoltre, è stato impostato un tempo fisso di 20 secondi per l'accensione tra un carico e l'altro.
-
-#### **Version: 1.4:**
-
-- Risolto limite dei 255 caratteri per la lista dispositivi da spengnere
+			{% if state_attr('timer.load_shedding', 'finishes_at') is not none %}
+				{{ now() > as_datetime(state_attr('timer.load_shedding', 'finishes_at')) - timedelta(minutes=2) }}
+			{% else %}
+				False
+			{% endif %}
+		```
+	- The logic of restarting loads has been modified. Now, instead of relying only on the disconnection threshold, a reactivation threshold has been added to avoid unwanted continuous cycling. In addition, a fixed time of 20 seconds has been set for power-up between loads.
 
 #### **Version: 1.5:**
 
-- Modificato template della macro.
-- Aggiunto recupero e ripristino volume alexa e google.
-- Fix tolto errore che non permetteva più di escludere dispositivo dal ripristino carico.
-- Cambiato sensor.marquee_power_control.
-- Cambiata variabile power utilizzata dall'automazione.
-- Aggiunto file entities_generali.yaml che presenta entità utilizzate in tutti i pacchetti di questo github.
+- Solved the 255-character limit for the list of devices to be turned off.
+- Modified macro template
+- Added recovery and restoration of volume for Alexa and Google.
+- Fixed issue preventing exclusion of devices from load restoration.
+- Changed sensor.marquee_power_control.
+- Changed power variable used by the automation.
+- Added entities_generali.yaml file containing entities used in all packages of this GitHub repository.
 
 #### **Version: 2.0:**
 
-- Modificato il template della macro, ora basato su dict.
-- Eliminata la funzione che spegneva i dispositivi accesi negli ultimi 30 secondi.
-- Aggiunto il controllo del consumo per singolo dispositivo (dove disponibile la potenza) prima di ripristinare il dispositivo.
-- Modificati gran parte dei template.
-- Ripristinata la data di sensor.marquee_power_control.
-- Aggiornata la lista dei carichi nella card, ora include dove disponibile il consumo.
-- Tolto il bug che provocava un malfunzionamento del pacchetto in presenza di dispositivi multiswitch, come ad esempio lo Shelly 4PM. Tuttavia, per tali dispositivi, non viene attualmente considerato l'assorbimento energetico reale.
-- Aggiunta fascia oraria per le notifiche tramite media_player (impostazione predefinita: 9-22).
-- Modificati i messaggi delle notifiche push. Ora le notifiche includono il tag e mostrano tutti gli elettrodomestici utilizzati.
-- Per aggiornare sostituire i file: notify_media_control_power.yaml, control_power.yaml, power_control.jinja e card.txt
-
-#### **Version: 2.1:**
-
-- I media player Alexa e Google ora vengono riconosciuti automaticamente, senza la necessità di inserirli manualmente nella lista.
-- Le entità "person" e i relativi sensori associati (notifiche di servizio, sensore della batteria, sensore della sveglia) vengono ora riconosciuti automaticamente. È necessario specificare il numero di telefono da associare all'entità "person" solo se si desidera utilizzare le chiamate VoIP (opzionale). 
-- Recupero e ripristino volumi nelle notifiche media_player.
-
-#### **Version: 2.2:**
-
-- Eliminato problema che non riaccendeva i dispositivi se non erano persenti nella lista di esclusione
-- update service/action
-- aggiunto id_device a file person (per altri utlizzi)
-- aggiunto bool winter/summer entities_generali (per altri usi)
+- Modified the macro template, now based on a dict.
+- Removed the function that turned off devices turned on in the last 30 seconds.
+- Added power consumption control for individual devices (where power data is available) before restoring the device.
+- Modified most of the templates.
+- Restored the date for sensor.marquee_power_control.
+- Updated the list of loads in the card, now including power consumption where available.
+- Fixed a bug that caused malfunctioning of the package in the presence of multiswitch devices, such as the Shelly 4PM. However, for these devices, actual power consumption is not currently considered.
+- Added time range for notifications via media_player (default setting: 9-22).
+- Modified push notification messages. Now notifications include the tag and display all used appliances.
+- To update, replace the files: notify_media_control_power.yaml, control_power.yaml, power_control.jinja, and card.txt

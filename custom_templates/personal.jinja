@@ -1,7 +1,7 @@
 {% macro persons() %}
-{% set numero = { 
+{% set phone_numbers = { 
 	'person.marco' : '33100000',
-	'person.tata' : '334800000' 
+	'person.nanny' : '334800000' 
 				} %}
 {% set id_device_mobile = integration_entities('mobile_app') | map('device_id') | reject ('eq', None) | unique  | list %} 
 {% set list_person_with_tracker = states.person | selectattr('attributes.device_trackers', 'defined') | map(attribute='entity_id') | list %}
@@ -12,8 +12,8 @@
 			"person": "{{ persons }}",
 			"battery": "{{ expand(ids | device_entities)  | selectattr('attributes.device_class', 'eq', 'battery') | map(attribute='entity_id') |first | default('none') }}",
 			"notify": "mobile_app_{{ device_attr(ids, 'name') | slugify }}",
-			"sveglia": "{{ expand(ids | device_entities)  | selectattr('attributes.device_class', 'eq', 'timestamp') | map(attribute='entity_id') |first | default('none') }}",
-			"cellulare": "{{numero.get(persons, 'none') }}",
+			"alarm": "{{ expand(ids | device_entities)  | selectattr('attributes.device_class', 'eq', 'timestamp') | map(attribute='entity_id') |first | default('none') }}",
+			"mobile_phone": "{{phone_numbers.get(persons, 'none') }}",
             "device_id": "{{device_id(expand(ids | device_entities)  | selectattr('attributes.device_class', 'eq', 'battery') | map(attribute='entity_id') |first | default('none'))}}"
 		}
 	{%- if loop.first %},{% endif -%}

@@ -1,30 +1,30 @@
 input_number:
-  ritardo_distacco_carico:
-    name: Ritardo Distacco Carico
+  load_disconnection_delay:
+    name: Load Disconnection Delay
     mode: box
     icon: mdi:timelapse
     unit_of_measurement: "min"
     min: 3
     max: 183
     step: 5
-  ripristino_carico:
-    name: Ripristino Carico
+  load_restoration:
+    name: Load Restoration
     mode: box
     icon: mdi:power-plug
     unit_of_measurement: "W"
     min: 99
     max: 8000
     step: 100
-  distacco_carico:
-    name: Distacco carico
+  load_disconnection:
+    name: Load Disconnection
     icon: mdi:power-plug-off
     min: 99
     max: 11000
     step: 100
     unit_of_measurement: "W"
     mode: box
-  distacco_urgente:
-    name: Distacco Urgente
+  urgent_disconnection:
+    name: Urgent Disconnection
     icon: mdi:alert
     min: 99
     max: 11000
@@ -33,14 +33,14 @@ input_number:
     mode: box
 
 timer:
-  distacco_carico:
+  load_disconnection:
     restore: true
-    name: Ritardo Distacco Carico
+    name: Load Disconnection Delay
 
 template:
   - select:
-      - name: "Escludi dispositivi dal ripristino carico"
-        state: "{{ states('sensor.dispositivi_esclusi_dal_ripristino_carico') }}"
+      - name: "Exclude Devices from Load Restoration"
+        state: "{{ states('sensor.devices_excluded_from_load_restoration') }}"
         options: >-
           {% from 'power_control.jinja' import dict_device %}
           {{  ['RESET'] + ( dict_device() | from_json ).keys() |list }}
@@ -56,7 +56,7 @@ template:
         event_data:
           types: power_control
     sensor:
-      - name: Dispositivi esclusi dal ripristino carico
+      - name: Devices Excluded from Load Restoration
         state: "{{ trigger.event.data.sensor_select }}"
         attributes:
           list_exclude: >-
@@ -75,7 +75,7 @@ template:
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.check_distacco
+        entity_id: input_boolean.check_disconnection
         to: "off"
         for:
           minutes: 1
@@ -86,10 +86,10 @@ template:
     sensor:
       - name: marquee power control
         state: >-
-          {% if trigger.entity_id == 'input_boolean.check_distacco' %}
-            {{ 'Ultimo intervento il ' ~ as_local(states['input_boolean.check_distacco'].last_changed).strftime('%d/%m/%Y %H:%M') }}
+          {% if trigger.entity_id == 'input_boolean.check_disconnection' %}
+            {{ 'Last intervention on ' ~ as_local(states['input_boolean.check_disconnection'].last_changed).strftime('%d/%m/%Y %H:%M') }}
           {% else %}
-            {{ trigger.event.data.message | default('Messaggio non impostato') }}
+            {{ trigger.event.data.message | default('Message not set') }}
           {% endif %}
 
 input_text:
@@ -98,89 +98,89 @@ input_text:
     max: 255
 
 input_boolean:
-  check_distacco:
+  check_disconnection:
     initial: "off"
 
 automation:
-  - alias: Power control
+  - alias: Power Control
     id: power_control
     mode: restart
     variables:
       power: >-
         {% from 'power_control.jinja' import power_control %}
-        {{ (power_control() | from_json)['Sensore W'] }}
+        {{ (power_control() | from_json)['Watt Sensor'] }}
     trigger:
-      - alias: "Superamento soglia 2 minuti prima del distacco"
+      - alias: "Exceeding threshold 2 minutes before disconnection"
         platform: template
         value_template: >-
-          {% set finishes_at = state_attr('timer.distacco_carico', 'finishes_at') %}
+          {% set finishes_at = state_attr('timer.load_disconnection', 'finishes_at') %}
           {% if finishes_at %}
               {{ now() > as_datetime(finishes_at) - timedelta(minutes=2) }}
           {% else %}
               False
           {% endif %}
-        id: preavviso_distacco
-      - alias: "Raggiunta soglia per distacco avvia timer"
+        id: disconnection_warning
+      - alias: "Reached threshold for disconnection starts timer"
         platform: template
         value_template: >-
           {% from 'power_control.jinja' import power_control %}
-          {% set power = states[(power_control() | from_json)['Sensore W']].state | int(0) %}
-            {{ power > states('input_number.distacco_carico') | int(0) }}
-        id: soglia_distacco
-      - alias: "Inizio distacco carichi URGENTE"
+          {% set power = states[(power_control() | from_json)['Watt Sensor']].state | int(0) %}
+            {{ power > states('input_number.load_disconnection') | int(0) }}
+        id: disconnection_threshold
+      - alias: "Start URGENT load disconnection"
         platform: template
         value_template: >-
           {% from 'power_control.jinja' import power_control %}
-          {% set power = states[(power_control() | from_json)['Sensore W']].state | int(0) %}
-            {{ power > states('input_number.distacco_urgente') | int(0) }}
-        id: inizio_distacco
-      - alias: "Inizio distacco carichi"
+          {% set power = states[(power_control() | from_json)['Watt Sensor']].state | int(0) %}
+            {{ power > states('input_number.urgent_disconnection') | int(0) }}
+        id: start_disconnection
+      - alias: "Start load disconnection"
         platform: event
         event_type: timer.finished
         event_data:
-          entity_id: timer.distacco_carico
-        id: inizio_distacco
-      - alias: "Consumi tornati regolare rispistina carichi"
+          entity_id: timer.load_disconnection
+        id: start_disconnection
+      - alias: "Consumption returned to normal, restore loads"
         platform: template
         value_template: >-
           {% from 'power_control.jinja' import power_control %}
-          {% set power = states[(power_control() | from_json)['Sensore W']].state | int(0) %}
-            {{ power < states('input_number.ripristino_carico') | int(0) }}
+          {% set power = states[(power_control() | from_json)['Watt Sensor']].state | int(0) %}
+            {{ power < states('input_number.load_restoration') | int(0) }}
         for:
           seconds: "20"
-        id: ripristino_carico
+        id: load_restoration
     action:
-      - alias: Notifica superamento soglia 2 minuti prima del distacco
+      - alias: Notify threshold exceeded 2 minutes before disconnection
         if:
-          - "{{ trigger.id == 'preavviso_distacco' and states(power) | int(0) < states('input_number.distacco_urgente') | int(0) }}"
+          - "{{ trigger.id == 'disconnection_warning' and states(power) | int(0) < states('input_number.urgent_disconnection') | int(0) }}"
         then:
-          - alias: INVIA NOTIFICA
+          - alias: SEND NOTIFICATION
             event: customizations
             event_data:
               types: notify_power_control
               tag: helper1power
               #critical: 1.0
-              title: Consumi Elevati
-              message: "{{ 'Superati i ' ~ states(power,  with_unit=true) }}"
-      - alias: Raggiunta soglia per distacco avvia timer
+              title: High Consumption
+              message: "{{ 'Exceeded ' ~ states(power,  with_unit=true) }}"
+      - alias: Reached threshold for disconnection starts timer
         if:
-          - "{{ trigger.id == 'soglia_distacco' }}"
+          - "{{ trigger.id == 'disconnection_threshold' }}"
         then:
-          - alias: Imposta timer di attesa
+          - alias: Set waiting timer
             action: timer.start
             data:
-              duration: "00:{{ states('input_number.ritardo_distacco_carico') | int(0) }}:00"
+              duration: "00:{{ states('input_number.load_disconnection_delay') | int(0) }}:00"
             target:
-              entity_id: timer.distacco_carico
-      - alias: Distacco carichi
+              entity_id: timer.load_disconnection
+      - alias: Load disconnection
         if:
-          - "{{ trigger.id == 'inizio_distacco' }}"
+          - "{{ trigger.id == 'start_disconnection' }}"
         then:
-          - alias: Cancella timer per evitare altro trigger
+          - alias: Cancel timer to avoid another trigger
             action: timer.cancel
             target:
-              entity_id: timer.distacco_carico
-          - alias: Elimina lista text
+              entity_id: timer.load_disconnection
+          - alias: Clear text list
             action: input_text.set_value
             data:
               value: none
@@ -190,9 +190,9 @@ automation:
               until:
                 - >-
                   {% from 'power_control.jinja' import power_control %}
-                  {{ states[(power_control() | from_json)['Sensore W']].state | int(0) > states('input_number.distacco_carico') | int(0) }}
+                  {{ states[(power_control() | from_json)['Watt Sensor']].state | int(0) > states('input_number.load_disconnection') | int(0) }}
               sequence:
-                - alias: Esegui loop per distacco carichi
+                - alias: Execute loop for load disconnection
                   repeat:
                     count: >-
                       {% from 'power_control.jinja' import dict_device %}
@@ -210,71 +210,71 @@ automation:
                             {{ my_dict.values() | selectattr('real_active','eq','on') | map(attribute='power')| list }}
                       - choose:
                           - conditions:
-                              - alias: Verifica se consumo ancora elevato
+                              - alias: Check if consumption is still high
                                 condition: template
                                 value_template: >-
-                                  {{ states(power) | int(0) > states('input_number.distacco_carico') | int(0) }}
-                              - alias: Controlla che ci siano device in uso
+                                  {{ states(power) | int(0) > states('input_number.load_disconnection') | int(0) }}
+                              - alias: Check if there are devices in use
                                 condition: template
                                 value_template: "{{ device_on | count > 0 }}"
                             sequence:
-                              - alias: Attiva bollean per sapere che distacco carichi è stato attivato
+                              - alias: Activate boolean to know load disconnection has been activated
                                 action: input_boolean.turn_on
                                 target:
-                                  entity_id: input_boolean.check_distacco
-                              - alias: "Salva dispositi : potenza"
+                                  entity_id: input_boolean.check_disconnection
+                              - alias: "Save devices : power"
                                 action: input_text.set_value
                                 data:
                                   value: >-
                                     "{{ device_on[0] }}" : "{{ power_on[0] }}" {{ (', ' ~ states('input_text.list_device_power_on') if not is_state('input_text.list_device_power_on', 'none') else ' ') }}
                                 target:
                                   entity_id: input_text.list_device_power_on
-                              - alias: INVIA NOTIFICA
+                              - alias: SEND NOTIFICATION
                                 event: customizations
                                 event_data:
                                   types: notify_power_control
                                   tag: helper1power
                                   message: >-
                                     {% set my_dict = (('{'+ states('input_text.list_device_power_on') + '}') | from_json).keys() | list%}
-                                    {% set spenti = expand(my_dict) | map(attribute='name') |list | join(', ') %}
-                                    {{ 'Spegnimento ' ~ spenti ~ '. Superati i ' ~ states(power,  with_unit=true) }}
-                              - alias: Spegni il carico
+                                    {% set turned_off = expand(my_dict) | map(attribute='name') |list | join(', ') %}
+                                    {{ 'Turning off ' ~ turned_off ~ '. Exceeded ' ~ states(power,  with_unit=true) }}
+                              - alias: Turn off the load
                                 action: homeassistant.turn_off
                                 target:
                                   entity_id: "{{ (device_on)[0] }}"
-                              - alias: Ritardo prossimo controllo per distacco
+                              - alias: Delay next disconnection check
                                 delay:
                                   seconds: 20
                         default:
-                          - alias: Verifica se consumo ancora elevato
+                          - alias: Check if consumption is still high
                             condition: template
-                            value_template: "{{ states(power) | int(0) > states('input_number.distacco_carico') | int(0) }}"
-                          - alias: INVIA NOTIFICA
+                            value_template: "{{ states(power) | int(0) > states('input_number.load_disconnection') | int(0) }}"
+                          - alias: SEND NOTIFICATION
                             event: customizations
                             event_data:
                               types: notify_power_control
                               tag: helper2power
-                              message: "{{ 'ATTENZIONE. Superati i ' ~ states(power,  with_unit=true) ~ '! Non ci sono elettrodomestici da spegnere.' }}"
-                          - stop: TERMINA DISTACCA PER MANCANDA DISPOSITIVI
-      - alias: Ripristino carico
+                              message: "{{ 'WARNING. Exceeded ' ~ states(power,  with_unit=true) ~ '! No appliances to turn off.' }}"
+                          - stop: END DISCONNECTION DUE TO LACK OF DEVICES
+      - alias: Load restoration
         if:
-          - "{{ trigger.id == 'ripristino_carico' }}"
+          - "{{ trigger.id == 'load_restoration' }}"
         then:
           - action: timer.cancel
             target:
-              entity_id: timer.distacco_carico
+              entity_id: timer.load_disconnection
           - if:
-              - alias: Controllo se è scattato il distacco carichi
+              - alias: Check if load disconnection has occurred
                 condition: template
-                value_template: "{{ is_state('input_boolean.check_distacco', 'on') }}"
+                value_template: "{{ is_state('input_boolean.check_disconnection', 'on') }}"
             then:
               - variables:
                   device_off: >-
                     {% set device_off = ('{ ' + states('input_text.list_device_power_on') + ' }') | from_json %} 
                     {{ device_off  }}
                   exclude: >-
-                    {{ state_attr('sensor.dispositivi_esclusi_dal_ripristino_carico', 'list_exclude') }}
-              - alias: Ripristino carico
+                    {{ state_attr('sensor.devices_excluded_from_load_restoration', 'list_exclude') }}
+              - alias: Load restoration
                 repeat:
                   for_each: >-
                     {% if exclude | length > 0  %}
@@ -286,26 +286,26 @@ automation:
                     - wait_template: >-
                         {% set device_power = device_off[repeat.index - 1] %}
                         {% if device_power is number %}
-                        {{ (device_power | int(0) + states(power) | int(0)) < states('input_number.distacco_carico') | int(0) }}
+                        {{ (device_power | int(0) + states(power) | int(0)) < states('input_number.load_disconnection') | int(0) }}
                         {% else %} 
                         true
                         {% endif %}
                       continue_on_timeout: true
                       timeout: "300"
-                    - alias: INVIA NOTIFICA
+                    - alias: SEND NOTIFICATION
                       event: customizations
                       event_data:
                         types: notify_power_control
-                        message: "{{ 'Il consumo è tornato nei limiti. ' ~ states[repeat.item].name ~ ' è stato acceso.' }}"
+                        message: "{{ 'Consumption has returned to normal. ' ~ states[repeat.item].name ~ ' has been turned on.' }}"
                         tag: helper2power
-                    - alias: Ripristina ultimo carico spento e non escluso
+                    - alias: Restore last turned off load not excluded
                       action: homeassistant.turn_on
                       target:
                         entity_id: "{{ repeat.item }}"
-                    - alias: Attendi per ripristinare elettrodomestici
+                    - alias: Wait to restore appliances
                       delay:
                         seconds: "20"
-              - alias: INVIA NOTIFICA
+              - alias: SEND NOTIFICATION
                 event: customizations
                 event_data:
                   types: notify_power_control
@@ -315,9 +315,9 @@ automation:
                         {% else %}
                           {% set my_dict = (('{'+ states('input_text.list_device_power_on') + '}') | from_json).keys() | reject('in', ['none']) | list %}
                         {% endif %}
-                        {% set spenti = expand(my_dict)  | map(attribute='name') |list | join(', ') %}
-                        I consumi sono tornati regolari{{',' ~ spenti ~ 'sono stati ripristinati.' if spenti | length > 0 }}.
-              - alias: Imposta il boolean in off per indicare che il ripristiono
+                        {% set turned_on = expand(my_dict)  | map(attribute='name') |list | join(', ') %}
+                        Consumption has returned to normal{{',' ~ turned_on ~ ' have been restored.' if turned_on | length > 0 }}.
+              - alias: Set boolean to off to indicate restoration
                 action: input_boolean.turn_off
                 target:
-                  entity_id: input_boolean.check_distacco
+                  entity_id: input_boolean.check_disconnection

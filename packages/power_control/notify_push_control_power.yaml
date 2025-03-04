@@ -8,7 +8,7 @@ automation:
         event_data:
           types: notify_power_control
     action:
-      - alias: Invia notifica notifica push alle persone che non sono in casa
+      - alias: Send push notification to people who are not at home
         repeat:
           for_each: >-
             {% from 'personal.jinja' import persons %}
@@ -20,7 +20,7 @@ automation:
           sequence:
             - action: "{{ repeat.item }}"
               data:
-                message: "{{ trigger.event.data.message|default('Messaggio non impostato') }}"
+                message: "{{ trigger.event.data.message|default('Message not set') }}"
                 title: "{{trigger.event.data.title |default('--POWER CONTROL--') }}"
                 data:
                   image: "{{ trigger.event.data.image | default(None) }}"
