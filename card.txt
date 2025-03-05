@@ -80,7 +80,7 @@ custom_fields:
                 else if (states['timer.load_shedding'].state !== 'idle') { 
                   return 'Shedding in '; }
                 else { 
-                  return 'Absorption: Ok 👍'; } 
+                  return 'Consumption: Ok 👍'; } 
               ]]]
             show_icon: false
             show_state: |
@@ -421,4 +421,44 @@ custom_fields:
           - color: |
               [[[  
                 if (states['automation.notify_control_power_push'].state == 'on') return "white   ";  
-                else return "dimGray
+                else return "dimGray"; 
+              ]]]
+      tap_action:
+        action: call-service
+        service: automation.toggle
+        service_data:
+          entity_id: automation.notify_control_power_push
+  media:
+    card:
+      type: custom:button-card
+      color: transparent
+      show_name: false
+      icon: |
+        [[[  
+        if (states['automation.notify_control_power_media_player'].state == 'on') return "mdi:account-voice";  
+        else return "mdi:speaker-off";  
+        ]]]
+      styles:
+        card:
+          - background-color: |
+              [[[  
+                if (states['automation.notify_control_power_media_player'].state == 'on') return "var(--primary-color)";  
+                else return "var(--disabled-color)"; 
+              ]]]
+          - border-radius: 18px
+          - border-style: none
+          - box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.2)
+          - width: 70px
+          - aspect-ratio: 1/0.7
+        icon:
+          - align-self: center
+          - color: |
+              [[[  
+                if (states['automation.notify_control_power_media_player'].state == 'on') return "white   ";  
+                else return "dimGray"; 
+              ]]]
+      tap_action:
+        action: call-service
+        service: automation.toggle
+        service_data:
+          entity_id: automation.notify_control_power_media_player

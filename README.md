@@ -106,7 +106,7 @@ For installation, you need to load the "custom_templates" folder in the "conf" d
 		%}
 	```
 
-	In addition, it is necessary to insert the sensor that measures the instantaneous general household absorption, expressed in watts (W).
+	In addition, it is necessary to insert the sensor that measures the instantaneous general household consumption, expressed in watts (W).
 
 
 	```
@@ -158,7 +158,7 @@ The card has 4 buttons at the bottom, each of which has a specific function. Bel
 
 	- Load shedding: This setting requires a value, expressed in watts (W), which is the threshold above which the system will perform the shedding of appliances. If the total power of the loads exceeds this value, the system will initiate the shedding of the devices.
 
-	- Load Restore: This option allows you to set a value expressed in watts (W), which is the threshold below which devices will be automatically reactivated. The system will start the reactivation process of the previously deactivated devices with an interval of 20 seconds between each reactivation, provided that the instantaneous absorption is less than the set value.
+	- Load Restore: This option allows you to set a value expressed in watts (W), which is the threshold below which devices will be automatically reactivated. The system will start the reactivation process of the previously deactivated devices with an interval of 20 seconds between each reactivation, provided that the instantaneous consumption is less than the set value.
 
 	- Urgent Shedding:  This value should be higher than "Load Shedding" and allows the last appliance in the list to be turned off immediately if it is turned on within 30 seconds. On the other hand, if the last appliance is not turned on within this time interval, the order of the list for detaching the other loads will be respected.
 
