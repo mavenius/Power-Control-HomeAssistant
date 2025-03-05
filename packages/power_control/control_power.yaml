@@ -3,12 +3,12 @@ input_number:
     name: Load Shedding Delay
     mode: box
     icon: mdi:timelapse
-    unit_of_measurement: "min"
-    min: 3
-    max: 183
-    step: 5
+    unit_of_measurement: "sec"
+    min: 1
+    max: 3600
+    step: 1
   load_restoration:
-    name: Load Restoration
+    name: Load Restoration Consumption Limit
     mode: box
     icon: mdi:power-plug
     unit_of_measurement: "W"
@@ -16,7 +16,7 @@ input_number:
     max: 8000
     step: 100
   load_shedding:
-    name: Load Shedding
+    name: Load Shedding Consumption
     icon: mdi:power-plug-off
     min: 99
     max: 11000
@@ -24,7 +24,7 @@ input_number:
     unit_of_measurement: "W"
     mode: box
   urgent_shedding:
-    name: Urgent Shedding
+    name: Urgent Shedding Consumption
     icon: mdi:alert
     min: 99
     max: 11000
@@ -35,7 +35,7 @@ input_number:
 timer:
   load_shedding:
     restore: true
-    name: Load Shedding Delay
+    name: Load Shedding Delay Timer
 
 template:
   - select:
@@ -78,7 +78,7 @@ template:
         entity_id: input_boolean.check_shedding
         to: "off"
         for:
-          minutes: 1
+          seconds: 15
       - platform: event
         event_type: customizations
         event_data:
@@ -87,7 +87,7 @@ template:
       - name: marquee power control
         state: >-
           {% if trigger.entity_id == 'input_boolean.check_shedding' %}
-            {{ 'Last intervention on ' ~ as_local(states['input_boolean.check_shedding'].last_changed).strftime('%d/%m/%Y %H:%M') }}
+            {{ 'Last intervention on ' ~ as_local(states['input_boolean.check_shedding'].last_changed).strftime('%m/%d/%Y %H:%M') }}
           {% else %}
             {{ trigger.event.data.message | default('Message not set') }}
           {% endif %}
@@ -169,7 +169,7 @@ automation:
           - alias: Set waiting timer
             action: timer.start
             data:
-              duration: "00:{{ states('input_number.load_shedding_delay') | int(0) }}:00"
+              duration: "00:00:{{ states('input_number.load_shedding_delay') | int(0) }}"
             target:
               entity_id: timer.load_shedding
       - alias: Load shedding
@@ -277,7 +277,7 @@ automation:
               - alias: Load restoration
                 repeat:
                   for_each: >-
-                    {% if exclude | length > 0  %}
+                    {% if exclude is not none and exclude | length > 0  %}
                       {{ device_off.keys() | reject('in', exclude + ['none']) | list }}
                     {% else %}
                       {{ device_off.keys() | list }}
@@ -310,7 +310,7 @@ automation:
                 event_data:
                   types: notify_power_control
                   message: >-
-                        {% if exclude | length > 0  %}
+                        {% if exclude is not none and exclude | length > 0  %}
                           {% set my_dict = (('{'+ states('input_text.list_device_power_on') + '}') | from_json).keys() | reject('in', exclude + ['none']) | list %}
                         {% else %}
                           {% set my_dict = (('{'+ states('input_text.list_device_power_on') + '}') | from_json).keys() | reject('in', ['none']) | list %}
