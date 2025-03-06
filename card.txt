@@ -1,6 +1,6 @@
 type: custom:button-card
 variables:
-  power_meter: sensor.general_power
+  power_meter: sensor.watchdog_power_3
 triggers_update: all
 styles:
   card:
@@ -11,7 +11,7 @@ styles:
         " logo logo watt watt watt . "
         " . marquee marquee marquee marquee . "
         " graph graph graph graph graph graph "
-        " . lista setting  push media . "
+        " . lista setting push media . "
     - grid-template-columns: 1.4vw repeat(4, 1fr) 1.3vw
     - grid-template-rows: min-content 1vw min-content min-content
     - grid-column-gap: 0.1em
@@ -29,9 +29,9 @@ custom_fields:
       name: |
         [[[
           if (states['sensor.marquee_power_control'].state !== 'unknown') { 
-            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px;"><span style='color: var(--secondary-text-color);'>${states['sensor.marquee_power_control'].state}</span></marquee>`; 
+            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px; margin-bottom: 14px;"><span style='color: var(--secondary-text-color);'>${states['sensor.marquee_power_control'].state}</span></marquee>`; 
           } else { 
-            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px;"><span style='color: var(--secondary-text-color);'>Waiting for first activation</span></marquee>`; 
+            return `<marquee style="width: 100%; margin-right: 150px; margin-top: 14px; margin-bottom: 14px;"><span style='color: var(--secondary-text-color);'>Waiting for first activation</span></marquee>`; 
           } 
         ]]]
   watt:
@@ -116,10 +116,14 @@ custom_fields:
         if (states['automation.power_control'].state == 'on') return "Active"; 
         else return "Off"; 
         ]]]
-      icon: |
+      icon: >
         [[[ 
-        if (states['automation.power_control'].state == 'on') return "mdi:head-flash"; 
+
+        if (states['automation.power_control'].state == 'on') return
+        "mdi:head-flash"; 
+
         else return "mdi:hand-back-right-off"; 
+
         ]]]
       show_entity_picture: false
       styles:
@@ -216,7 +220,7 @@ custom_fields:
                       border: 100px; 
                       border-radius: 0px;
                       }
-                  entity: select.escludi_dispositivi_dal_ripristino_carico
+                  entity: select.exclude_devices_from_load_restoration
                   fill_container: true
                   icon_type: none
                   secondary_info: none
@@ -256,7 +260,6 @@ custom_fields:
                     |{% for device_name, device_info in my_dict.items() %}
                       | {{ device_name }} &nbsp;  | {{ device_info['state'] | upper }} &nbsp; |  {{ device_info['power'] ~ ' W' if device_info['power']  != 'sconosciuto'}} | 
                     |{% endfor %}
-
   setting:
     card:
       type: custom:button-card
@@ -296,13 +299,13 @@ custom_fields:
                 grid:
                   - grid-template-areas: |-
                       " . times     values        . " 
-                      " . disconnect_delay  load_disconnect   . "   
-                      " . restore_delay  emergency_disconnect . "
+                      " . shedding_delay  load_shedding   . "   
+                      " . restore_delay  emergency_shedding . "
                   - grid-template-columns: 0.1vw repeat(2, 1fr) 0.1vw
                   - grid-column-gap: 0.3em
                   - grid-row-gap: 0.3em
               custom_fields:
-                tempi:
+                times:
                   card:
                     style: |
                       ha-card {  
@@ -316,10 +319,10 @@ custom_fields:
                         - font-weight: bolder
                     tap_action:
                       action: none
-                rit_dist:
+                shedding_delay:
                   card:
                     type: custom:mushroom-number-card
-                    entity: input_number.load_shedding
+                    entity: input_number.load_shedding_delay
                     layout: vertical
                     icon_color: green
                     tap_action:
@@ -334,7 +337,7 @@ custom_fields:
                           --ha-card-background: var(--card-background-color);  
                           --mdc-dialog-scrim-color: rgba(15,15,15,0.9);  
                           }
-                rit_ripr:
+                restore_delay:
                   card:
                     type: custom:mushroom-number-card
                     entity: input_number.load_restoration
@@ -352,7 +355,7 @@ custom_fields:
                           --ha-card-background: var(--card-background-color);  
                           --mdc-dialog-scrim-color: rgba(15,15,15,0.9);  
                           }
-                soglie:
+                values:
                   card:
                     style: |
                       ha-card {  
@@ -366,7 +369,7 @@ custom_fields:
                         - font-weight: bolder
                     tap_action:
                       action: none
-                dis_carichi:
+                load_shedding:
                   card:
                     type: custom:mushroom-number-card
                     entity: input_number.load_shedding
@@ -377,7 +380,7 @@ custom_fields:
                           --ha-card-background: var(--card-background-color);  
                           --mdc-dialog-scrim-color: rgba(15,15,15,0.9);  
                           }
-                dis_emergenza:
+                emergency_shedding:
                   card:
                     type: custom:mushroom-number-card
                     entity: input_number.urgent_shedding
@@ -399,10 +402,14 @@ custom_fields:
       type: custom:button-card
       color: transparent
       show_name: false
-      icon: |
+      icon: >
         [[[  
-        if (states['automation.notify_control_power_push'].state == 'on') return "mdi:cellphone-check";  
+
+        if (states['automation.notify_control_power_push'].state == 'on') return
+        "mdi:cellphone-check";  
+
         else return "mdi:cellphone-off";  
+
         ]]]
       styles:
         card:
@@ -433,10 +440,14 @@ custom_fields:
       type: custom:button-card
       color: transparent
       show_name: false
-      icon: |
+      icon: >
         [[[  
-        if (states['automation.notify_control_power_media_player'].state == 'on') return "mdi:account-voice";  
+
+        if (states['automation.notify_control_power_media_player'].state ==
+        'on') return "mdi:account-voice";  
+
         else return "mdi:speaker-off";  
+
         ]]]
       styles:
         card:
