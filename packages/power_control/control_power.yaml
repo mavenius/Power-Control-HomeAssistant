@@ -5,7 +5,7 @@ input_number:
     icon: mdi:timelapse
     unit_of_measurement: "sec"
     min: 1
-    max: 3600
+    max: 360
     step: 1
   load_restoration:
     name: Load Restoration Consumption Limit
@@ -304,7 +304,7 @@ automation:
                         entity_id: "{{ repeat.item }}"
                     - alias: Wait to restore appliances
                       delay:
-                        seconds: "20"
+                        seconds: "45"
               - alias: SEND NOTIFICATION
                 event: customizations
                 event_data:
@@ -316,8 +316,7 @@ automation:
                           {% set my_dict = (('{'+ states('input_text.list_device_power_on') + '}') | from_json).keys() | reject('in', ['none']) | list %}
                         {% endif %}
                         {% set turned_on = expand(my_dict)  | map(attribute='name') |list | join(', ') %}
-                        Consumption has returned to normal{{',' ~ turned_on ~ ' have been restored.' if turned_on | length > 0 }}.
-              - alias: Set boolean to off to indicate restoration
+                        Consumption has returned to normal{{'. ' ~ turned_on ~ ' has been restored.' if my_dict | length == 1 }}{{'. ' ~ turned_on ~ ' have been restored.' if my_dict | length > 1 }}              - alias: Set boolean to off to indicate restoration
                 action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.check_shedding
